@@ -86,7 +86,7 @@ function playMusic(track, pause = false) {
   currentSong.src = `/${currFolder}/` + track;
   if (!pause) {
     currentSong.play();
-    play.src = "pause.svg";
+    play.src = "/assets/pause.svg";
 
   }
   document.querySelector(".songTime").innerHTML = "00:00 / 00:00";
@@ -175,10 +175,10 @@ async function main() {
   play.addEventListener("click", () => {
     if (currentSong.paused) {
       currentSong.play();
-      play.src = "pause.svg";
+      play.src = "/assets/pause.svg";
     } else {
       currentSong.pause();
-      play.src = "play.svg";
+      play.src = "/assets/play.svg";
     }
   });
 
