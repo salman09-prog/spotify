@@ -139,7 +139,7 @@ async function displayAlbums() {
     </div>
     <div class="img">
       <img
-        src="https://salman09-prog.github.io/spotify/songs/${folder}/cover.jpg"
+        src="songs/${folder}/cover.jpg"
         alt=""
       />
     </div>
@@ -153,7 +153,7 @@ async function displayAlbums() {
   //Load data into card when clicked
   Array.from(document.getElementsByClassName("card")).forEach(e => {
     e.addEventListener("click", async item => {
-      songs = await getSongs(`https://salman09-prog.github.io/spotify/songs/${item.currentTarget.dataset.folder}`)
+      songs = await getSongs(`songs/${item.currentTarget.dataset.folder}`)
       playMusic(songs[0])
 
     })
@@ -163,7 +163,7 @@ async function displayAlbums() {
 
 async function main() {
   //Get the list of all the songs
-  await getSongs("https://salman09-prog.github.io/spotify/songs/charlie-puth");
+  await getSongs("songs/charlie-puth");
 
   playMusic(songs[0], true)
 
