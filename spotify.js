@@ -49,7 +49,7 @@ async function getSongs(folder) {
     songUL.innerHTML =
       songUL.innerHTML +
       `<li>
-    <img class="invert" src="music.svg" alt="" />
+    <img class="invert" src="./assets/music.svg" alt="" />
       <div class="info">
         <div> ${song
         .replaceAll("%20", " ")
@@ -60,7 +60,7 @@ async function getSongs(folder) {
    
       <div class="playnow">
         <span>Play Now</span>
-        <img class="invert" src="play.svg" alt="">
+        <img class="invert" src="./assets/play.svg" alt="">
    
       </div>
     </li>`;
@@ -86,7 +86,7 @@ function playMusic(track, pause = false) {
   currentSong.src = `/${currFolder}/` + track;
   if (!pause) {
     currentSong.play();
-    play.src = "/assets/pause.svg";
+    play.src = "./assets/pause.svg";
 
   }
   document.querySelector(".songTime").innerHTML = "00:00 / 00:00";
@@ -98,7 +98,7 @@ function playMusic(track, pause = false) {
 //For displaying albums
 
 async function displayAlbums() {
-  let a = await fetch(`http://127.0.0.1:5500/songs/`);
+  let a = await fetch(`https://salman09-prog.github.io/spotify/songs/`);
   let response = await a.text();
   let div = document.createElement("div");
   div.innerHTML = response;
@@ -114,7 +114,7 @@ async function displayAlbums() {
 
       //Get metadata of the folder
 
-      let a = await fetch(`http://127.0.0.1:5500/songs/${folder}/info.json`);
+      let a = await fetch(`https://salman09-prog.github.io/spotify/songs/${folder}/info.json`);
       let response = await a.json();
       let cardContainer = document.querySelector(".cardContainer")
       cardContainer.innerHTML = cardContainer.innerHTML + `   <div data-folder="${folder}" class="card">
@@ -139,7 +139,7 @@ async function displayAlbums() {
     </div>
     <div class="img">
       <img
-        src="/songs/${folder}/cover.jpg"
+        src="https://salman09-prog.github.io/spotify/songs/${folder}/cover.jpg"
         alt=""
       />
     </div>
@@ -153,7 +153,7 @@ async function displayAlbums() {
   //Load data into card when clicked
   Array.from(document.getElementsByClassName("card")).forEach(e => {
     e.addEventListener("click", async item => {
-      songs = await getSongs(`songs/${item.currentTarget.dataset.folder}`)
+      songs = await getSongs(`https://salman09-prog.github.io/spotify/songs/${item.currentTarget.dataset.folder}`)
       playMusic(songs[0])
 
     })
@@ -163,7 +163,7 @@ async function displayAlbums() {
 
 async function main() {
   //Get the list of all the songs
-  await getSongs("songs/charlie-puth");
+  await getSongs("https://salman09-prog.github.io/spotify/songs/charlie-puth");
 
   playMusic(songs[0], true)
 
@@ -175,10 +175,10 @@ async function main() {
   play.addEventListener("click", () => {
     if (currentSong.paused) {
       currentSong.play();
-      play.src = "/assets/pause.svg";
+      play.src = "./assets/pause.svg";
     } else {
       currentSong.pause();
-      play.src = "/assets/play.svg";
+      play.src = "./assets/play.svg";
     }
   });
 
@@ -282,9 +282,6 @@ async function main() {
       document.querySelector(".range").getElementsByTagName("input")[0].value = 10;
     }
   })
-
-
-
 }
 
 
