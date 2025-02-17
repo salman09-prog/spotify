@@ -2,10 +2,10 @@ require("dotenv").config();
 let currentSong = new Audio();
 let songs;
 let currFolder;
-let CLOUD_NAME = process.env.CLOUD_NAME;
-let CLOUD_API_KEY = process.env.CLOUD_API_KEY;
-let CLOUD_API_SECRET = process.env.CLOUD_API_SECRET;
-let CLOUD_URL = `cloudinary://${CLOUD_API_KEY}:${CLOUD_API_SECRET}@dqnnpk2yy/songs`;
+let CLOUD_NAME = "dqnnpk2yy";
+// let CLOUD_API_KEY = process.env.CLOUD_API_KEY;
+// let CLOUD_API_SECRET = process.env.CLOUD_API_SECRET;
+// let CLOUD_URL = `cloudinary://${CLOUD_API_KEY}:${CLOUD_API_SECRET}@dqnnpk2yy/songs`;
 
 
 //For gettin duration of a song
@@ -29,13 +29,13 @@ function secondsToMinutesSeconds(seconds) {
 async function getSongs(folder) {
   try {
     currFolder = folder;
-    let a = await fetch(`${CLOUD_URL}/${currFolder}/`);
-    let response = await a.text();
+    let response = await fetch(`https://res.cloudinary.com/${CLOUD_NAME}/video/list/${folder}.json`);
+    let data = await response.json();
+
     //For parsing only songs not whole data
-    let div = document.createElement("div");
-    div.innerHTML = response;
-    let as = div.getElementsByTagName("a");
-    songs = [];
+    songs = data.resources
+      .filter(file => file.format === 'mp3')
+      .map(file => file.filename);
 
     for (let index = 0; index < as.length; index++) {
       const element = as[index];
@@ -99,7 +99,7 @@ async function getSongs(folder) {
 function playMusic(track, pause = false) {
   //   let audio = new Audio("/songs/" + track);
   //   audio.play();
-  currentSong.src = `${CLOUD_URL}/${currFolder}/` + track;
+  currentSong.src = `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/${currFolder}/${track}`;
   if (!pause) {
     currentSong.play();
     play.src = "./assets/pause.svg";
@@ -114,67 +114,50 @@ function playMusic(track, pause = false) {
 //For displaying albums
 
 async function displayAlbums() {
-  let a = await fetch(`${CLOUD_URL}`);
-  let response = await a.text();
-  let div = document.createElement("div");
-  div.innerHTML = response;
-  let anchors = div.getElementsByTagName("a")
-  let array = Array.from(anchors)
+  try {
+    // Get the list of folders (your albums)
+    let response = await fetch(`https://res.cloudinary.com/${CLOUD_NAME}/video/list/songs.json`);
+    let data = await response.json();
+    let folders = data.folders; // This will contain your album folders
 
-  for (let index = 0; index < array.length; index++) {
-    const e = array[index];
+    let cardContainer = document.querySelector(".cardContainer");
+    cardContainer.innerHTML = "";
 
-
-    if (e.href.includes("/songs/")) {
-      let folder = (e.href.split("/").slice(-1)[0])
-
-      //Get metadata of the folder
-
-      let a = await fetch(`${CLOUD_URL}/${folder}/info.json`);
-      let response = await a.json();
-      let cardContainer = document.querySelector(".cardContainer")
-      cardContainer.innerHTML = cardContainer.innerHTML + `<div data-folder="${folder}" class="card">
-    <div class="play">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        class="injected-svg"
-        data-src="https://cdn.hugeicons.com/icons/play-solid-sharp.svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        role="img"
-        color="#000000"
-      >
-        <path
-          d="M4.62355 3.35132C4.85479 3.21713 5.13998 3.21617 5.3721 3.34882L19.3721 11.3488C19.6058 11.4824 19.75 11.7309 19.75 12C19.75 12.2691 19.6058 12.5177 19.3721 12.6512L5.3721 20.6512C5.13998 20.7838 4.85479 20.7829 4.62355 20.6487C4.39232 20.5145 4.25 20.2674 4.25 20V4C4.25 3.73265 4.39232 3.48551 4.62355 3.35132Z"
-          fill="#000000"
-        ></path>
-      </svg>
-    </div>
-    <div class="img">
-      <img
-        src="${CLOUD_URL}/${folder}/cover.jpg"
-        alt=""
-      />
-    </div>
-    <h2>${response.title}</h2>
-    <p>${response.description}</p>
-  </div>`
-
+    for (const folder of folders) {
+      try {
+        // Get the info.json for each folder
+        let infoResponse = await fetch(`https://res.cloudinary.com/${CLOUD_NAME}/raw/upload/songs/${folder}/info.json`);
+        let info = await infoResponse.json();
+        
+        cardContainer.innerHTML += `<div data-folder="songs/${folder}" class="card">
+          <div class="play">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="injected-svg" role="img" color="#000000">
+              <path d="M4.62355 3.35132C4.85479 3.21713 5.13998 3.21617 5.3721 3.34882L19.3721 11.3488C19.6058 11.4824 19.75 11.7309 19.75 12C19.75 12.2691 19.6058 12.5177 19.3721 12.6512L5.3721 20.6512C5.13998 20.7838 4.85479 20.7829 4.62355 20.6487C4.39232 20.5145 4.25 20.2674 4.25 20V4C4.25 3.73265 4.39232 3.48551 4.62355 3.35132Z" fill="#000000"></path>
+            </svg>
+          </div>
+          <div class="img">
+            <img src="https://res.cloudinary.com/${CLOUD_NAME}/image/upload/songs/${folder}/cover.jpg" alt="" />
+          </div>
+          <h2>${info.title}</h2>
+          <p>${info.description}</p>
+        </div>`;
+      } catch (error) {
+        console.error(`Error processing folder ${folder}:`, error);
+      }
     }
+
+    // Add click events to cards
+    Array.from(document.getElementsByClassName("card")).forEach(e => {
+      e.addEventListener("click", async item => {
+        songs = await getSongs(item.currentTarget.dataset.folder);
+        if (songs.length > 0) {
+          playMusic(songs[0]);
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error displaying albums:", error);
   }
-
-  //Load data into card when clicked
-  Array.from(document.getElementsByClassName("card")).forEach(e => {
-    e.addEventListener("click", async item => {
-      songs = await getSongs(`songs/${item.currentTarget.dataset.folder}`)
-      playMusic(songs[0])
-
-    })
-  })
-
 }
 
 async function main() {
