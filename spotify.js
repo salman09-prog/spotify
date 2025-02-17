@@ -1,12 +1,7 @@
-require("dotenv").config();
 let currentSong = new Audio();
 let songs;
 let currFolder;
 let CLOUD_NAME = "dqnnpk2yy";
-// let CLOUD_API_KEY = process.env.CLOUD_API_KEY;
-// let CLOUD_API_SECRET = process.env.CLOUD_API_SECRET;
-// let CLOUD_URL = `cloudinary://${CLOUD_API_KEY}:${CLOUD_API_SECRET}@dqnnpk2yy/songs`;
-
 
 //For gettin duration of a song
 
