@@ -1,6 +1,11 @@
+require("dotenv").config();
 let currentSong = new Audio();
 let songs;
 let currFolder;
+let CLOUD_NAME = process.env.CLOUD_NAME;
+let CLOUD_API_KEY = process.env.CLOUD_API_KEY;
+let CLOUD_API_SECRET = process.env.CLOUD_API_SECRET;
+let CLOUD_URL = `cloudinary://${CLOUD_API_KEY}:${CLOUD_API_SECRET}@dqnnpk2yy/songs`;
 
 
 //For gettin duration of a song
@@ -22,68 +27,79 @@ function secondsToMinutesSeconds(seconds) {
 // For getting songs        
 
 async function getSongs(folder) {
-  currFolder = folder;
-  let a = await fetch(`http://127.0.0.1:5500/${currFolder}/`);
-  let response = await a.text();
-  //For parsing only songs not whole data
-  let div = document.createElement("div");
-  div.innerHTML = response;
-  let as = div.getElementsByTagName("a");
-  songs = [];
-  for (let index = 0; index < as.length; index++) {
-    const element = as[index];
-    if (element.href.endsWith(".mp3")) {
-      songs.push(element.href.split(`/${currFolder}/`)[1]);
+  try {
+    currFolder = folder;
+    let a = await fetch(`${CLOUD_URL}/${currFolder}/`);
+    let response = await a.text();
+    //For parsing only songs not whole data
+    let div = document.createElement("div");
+    div.innerHTML = response;
+    let as = div.getElementsByTagName("a");
+    songs = [];
+
+    for (let index = 0; index < as.length; index++) {
+      const element = as[index];
+      if (element.href.endsWith(".mp3")) {
+        songs.push(element.href.split(`/${currFolder}/`)[1]);
+      }
+
+      //Show all the songs in the playlist
+      let songUL = document
+        .querySelector(".songList")
+        .getElementsByTagName("ul")[0];
+
+      songUL.innerHTML = ""
     }
-  }
+    for (const song of songs) {
+      songUL.innerHTML =
+        songUL.innerHTML +
+        `<li>
+      <img class="invert" src="./assets/music.svg" alt="" />
+        <div class="info">
+          <div> ${song
+          .replaceAll("%20", " ")
+          .replaceAll("/", " ")
+        }</div>
+          <div>Salman</div>
+        </div>
+     
+        <div class="playnow">
+          <span>Play Now</span>
+          <img class="invert" src="./assets/play.svg" alt="">
+     
+        </div>
+      </li>`;
+    }
 
+    //Adding Event listener to each song so that we can play each song
 
-
-  //Show all the songs in the playlist
-  let songUL = document
-    .querySelector(".songList")
-    .getElementsByTagName("ul")[0];
-
-  songUL.innerHTML = ""
-  for (const song of songs) {
-    songUL.innerHTML =
-      songUL.innerHTML +
-      `<li>
-    <img class="invert" src="./assets/music.svg" alt="" />
-      <div class="info">
-        <div> ${song
-        .replaceAll("%20", " ")
-        .replaceAll("/", " ")
-      }</div>
-        <div>Salman</div>
-      </div>
-   
-      <div class="playnow">
-        <span>Play Now</span>
-        <img class="invert" src="./assets/play.svg" alt="">
-   
-      </div>
-    </li>`;
-  }
-
-  //Adding Event listener to each song so that we can play each song
-
-  Array.from(
-    document.querySelector(".songList").getElementsByTagName("li")
-  ).forEach((e) => {
-    e.addEventListener("click", (element) => {
-      console.log(e.querySelector(".info").firstElementChild.innerHTML.trim())
-      playMusic(e.querySelector(".info").firstElementChild.innerHTML.trim());
+    Array.from(
+      document.querySelector(".songList").getElementsByTagName("li")
+    ).forEach((e) => {
+      e.addEventListener("click", (element) => {
+        console.log(e.querySelector(".info").firstElementChild.innerHTML.trim())
+        playMusic(e.querySelector(".info").firstElementChild.innerHTML.trim());
+      });
     });
-  });
+    return songs;
 
-  return songs
+  } catch (error) {
+    console.error("Error fetching songs:", error);
+    return [];
+  }
+
+
+
+
+
+
+
 }
 
 function playMusic(track, pause = false) {
   //   let audio = new Audio("/songs/" + track);
   //   audio.play();
-  currentSong.src = `/${currFolder}/` + track;
+  currentSong.src = `${CLOUD_URL}/${currFolder}/` + track;
   if (!pause) {
     currentSong.play();
     play.src = "./assets/pause.svg";
@@ -98,7 +114,7 @@ function playMusic(track, pause = false) {
 //For displaying albums
 
 async function displayAlbums() {
-  let a = await fetch(`http://127.0.0.1:5500/songs/`);
+  let a = await fetch(`${CLOUD_URL}`);
   let response = await a.text();
   let div = document.createElement("div");
   div.innerHTML = response;
@@ -114,7 +130,7 @@ async function displayAlbums() {
 
       //Get metadata of the folder
 
-      let a = await fetch(`http://127.0.0.1:5500/songs/${folder}/info.json`);
+      let a = await fetch(`${CLOUD_URL}/${folder}/info.json`);
       let response = await a.json();
       let cardContainer = document.querySelector(".cardContainer")
       cardContainer.innerHTML = cardContainer.innerHTML + `<div data-folder="${folder}" class="card">
@@ -139,7 +155,7 @@ async function displayAlbums() {
     </div>
     <div class="img">
       <img
-        src="songs/${folder}/cover.jpg"
+        src="${CLOUD_URL}/${folder}/cover.jpg"
         alt=""
       />
     </div>
@@ -163,7 +179,7 @@ async function displayAlbums() {
 
 async function main() {
   //Get the list of all the songs
-  await getSongs("songs/charlie-puth");
+  await getSongs(`${CLOUD_URL}/charlie-puth`);
 
   playMusic(songs[0], true)
 
@@ -288,3 +304,88 @@ async function main() {
 main();
 
 
+
+
+// // Import Firebase SDK
+// import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+// import { getStorage, ref, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
+
+// // Firebase Configuration
+// const firebaseConfig = {
+//   apiKey: "YOUR_API_KEY",
+//   authDomain: "YOUR_AUTH_DOMAIN",
+//   projectId: "YOUR_PROJECT_ID",
+//   storageBucket: "YOUR_STORAGE_BUCKET",
+//   messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+//   appId: "YOUR_APP_ID"
+// };
+
+// // Initialize Firebase
+// const app = initializeApp(firebaseConfig);
+// const storage = getStorage(app);
+
+// // Function to fetch songs from Firebase Storage
+// async function getSongs() {
+//     const songsRef = ref(storage, 'songs/'); // Path in Firebase Storage
+//     try {
+//         const songList = await listAll(songsRef);
+//         const songs = await Promise.all(
+//             songList.items.map(async (song) => {
+//                 const url = await getDownloadURL(song);
+//                 return { filename: song.name, url };
+//             })
+//         );
+//         return songs;
+//     } catch (error) {
+//         console.error("Error fetching songs from Firebase:", error);
+//         return [];
+//     }
+// }
+
+// // Function to fetch album metadata from Firebase
+// async function getAlbums() {
+//     const albumRef = ref(storage, 'info.json');
+//     try {
+//         const albumURL = await getDownloadURL(albumRef);
+//         const response = await fetch(albumURL);
+//         const albums = await response.json();
+//         return albums;
+//     } catch (error) {
+//         console.error("Error fetching album metadata:", error);
+//         return [];
+//     }
+// }
+
+// // Function to display songs
+// async function displaySongs() {
+//     const songs = await getSongs();
+//     const songContainer = document.getElementById("song-container");
+//     songContainer.innerHTML = "";
+
+//     songs.forEach(song => {
+//         const songElement = document.createElement("div");
+//         songElement.className = "song";
+//         songElement.innerHTML = `<p>${song.filename}</p><audio controls><source src="${song.url}" type="audio/mpeg"></audio>`;
+//         songContainer.appendChild(songElement);
+//     });
+// }
+
+// // Function to display albums
+// async function displayAlbums() {
+//     const albums = await getAlbums();
+//     const albumContainer = document.getElementById("album-container");
+//     albumContainer.innerHTML = "";
+
+//     albums.forEach(album => {
+//         const albumElement = document.createElement("div");
+//         albumElement.className = "album";
+//         albumElement.innerHTML = `<img src="${album.cover}" alt="${album.name}"><p>${album.name}</p>`;
+//         albumContainer.appendChild(albumElement);
+//     });
+// }
+
+// // Load songs and albums when the page loads
+// document.addEventListener("DOMContentLoaded", async () => {
+//     await displaySongs();
+//     await displayAlbums();
+// });
