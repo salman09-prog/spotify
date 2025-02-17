@@ -157,7 +157,7 @@ async function displayAlbums() {
 
 async function main() {
   //Get the list of all the songs
-  await getSongs(`${CLOUD_URL}/charlie-puth`);
+  await getSongs(`songs/charlie-puth`);
 
   playMusic(songs[0], true)
 
